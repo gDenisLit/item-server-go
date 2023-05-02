@@ -13,13 +13,13 @@ This is a production-ready Go server built with the Fiber framework. It provides
 Clone the project
 
 ```bash
-  git clone https://github.com/gDenisLit/item-server-ts.git
+  git clone https://github.com/gDenisLit/item-server-go.git
 ```
 
 Go to the project directory
 
 ```bash
-  cd item-server-ts
+  cd item-server-go
 ```
 
 Install dependencies
