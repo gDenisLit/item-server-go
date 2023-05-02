@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"github.com/gDenisLit/item-server-go/cmd"
+	"github.com/gDenisLit/item-server-go/cmd/services"
+)
 
 func main() {
-	fmt.Println("Hello world")
+	services.LoadEnv()
+	cmd.InitServer()
 }
