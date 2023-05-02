@@ -5,7 +5,7 @@ This is a production-ready Go server built with the Fiber framework. It provides
 
 ## Tech Stack
 
-**Server:** go, fiber, cecurecookie, crypto, mongodb,
+**Server:** go, fiber, securecookie, crypto, mongodb,
 
 
 ## Run Locally
