@@ -29,7 +29,7 @@ Go to the project directory
 Install dependencies
 
 ```bash
-  go mod tidy
+  make install
 ```
 
 Start the server in dev enviroment
