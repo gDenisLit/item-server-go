@@ -1,7 +1,7 @@
 
-# Item server - Flask Python
+# Item server - Fiber Go
 
-This is a production-ready Python server built with the Flask framework. It provides RESTful API endpoints for managing items, users, and authentication. This is the Flask Python version of the Item App - A generic e2e app im building with various technologies, using Vue, React, Express, Go and Pyhton.
+This is a production-ready Go server built with the Fiber framework. It provides RESTful API endpoints for managing items, users, and authentication. This is the Fiber Go version of the Item App - A generic e2e app im building with various technologies, using Vue, React, Express, Go and Pyhton.
 
 
 ![enter image description here](https://res.cloudinary.com/dokgseqgj/image/upload/v1683823793/item-server-architecture_ojhwhg.png)
@@ -9,7 +9,7 @@ This is a production-ready Python server built with the Flask framework. It prov
 
 ## Tech Stack
 
-**Server:** python, flask, pymongo, pyjwt, bcrypt, async
+**Server:** go, fiber, securecookie, crypto, mongodb,
 
 
 ## Run Locally
@@ -17,19 +17,19 @@ This is a production-ready Python server built with the Flask framework. It prov
 Clone the project
 
 ```bash
-  git clone https://github.com/gDenisLit/item-server-python.git
+  git clone https://github.com/gDenisLit/item-server-go.git
 ```
 
 Go to the project directory
 
 ```bash
-  cd item-server-python
+  cd item-server-go
 ```
 
 Install dependencies
 
 ```bash
-  make install
+  go mod tidy
 ```
 
 Start the server in dev enviroment
@@ -50,9 +50,6 @@ Database name
 
 `CRYPTER_KEY`
 Base 64 secret key
-
-`ENCODE_ALGO`
-Algorithm type for jwt
 
 ## API Reference
 
