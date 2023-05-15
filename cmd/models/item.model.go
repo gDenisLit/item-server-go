@@ -33,3 +33,20 @@ func (item *ItemDTO) Validate() error {
 	}
 	return nil
 }
+
+func (item *Item) Validate() error {
+	err := errors.New("missing required propery")
+	if item.ID == primitive.NilObjectID {
+		return err
+	}
+	if item.Name == "" {
+		return err
+	}
+	if item.Price == 0 {
+		return err
+	}
+	if item.ImgUrl == "" {
+		return err
+	}
+	return nil
+}

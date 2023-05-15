@@ -3,7 +3,6 @@ package item
 import (
 	"errors"
 
-	"github.com/gDenisLit/item-server-go/cmd/dtos"
 	"github.com/gDenisLit/item-server-go/cmd/models"
 
 	"github.com/gDenisLit/item-server-go/cmd/services/logger"
@@ -15,10 +14,10 @@ import (
 var clientError *models.ClientErr
 
 func GetItems(ctx *fiber.Ctx) error {
-
 	filterBy := models.FilterBy{
 		Txt: ctx.Query("txt"),
 	}
+
 	items, err := itemService.query(filterBy)
 	if err != nil {
 		return response.ServerError(ctx)
@@ -31,6 +30,7 @@ func GetItemById(ctx *fiber.Ctx) error {
 	if id == "" {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
+
 	item, err := itemService.getById(id)
 	if err != nil {
 		if errors.As(err, &clientError) {
@@ -47,6 +47,7 @@ func RemoveItem(ctx *fiber.Ctx) error {
 	if id == "" {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
+
 	itemId, err := itemService.remove(id)
 	if err != nil {
 		if errors.As(err, &clientError) {
@@ -64,9 +65,10 @@ func AddItem(ctx *fiber.Ctx) error {
 	validateErr := item.Validate()
 
 	if parseErr != nil || validateErr != nil {
-		logger.Warn("Error [AddItem]: Invalid post request", parseErr, validateErr)
+		logger.Warn("Error [AddItem]: Invalid post request from:", ctx.IP(), parseErr, validateErr)
 		return response.BadRequest(ctx, errors.New("invalid item object"))
 	}
+
 	savedItem, err := itemService.add(item)
 	if err != nil {
 		if errors.As(err, &clientError) {
@@ -79,13 +81,15 @@ func AddItem(ctx *fiber.Ctx) error {
 }
 
 func UpdateItem(ctx *fiber.Ctx) error {
-	item := new(dtos.UpdateItemDTO)
-	err := ctx.BodyParser(item)
+	item := new(models.Item)
+	parseErr := ctx.BodyParser(item)
+	validateErr := item.Validate()
 
-	if err != nil {
-		logger.Warn("Error [UpdateItem]: Invalid post request", err)
+	if parseErr != nil || validateErr != nil {
+		logger.Warn("Error [UpdateItem]: Invalid post request from:", ctx.IP(), parseErr, validateErr)
 		return response.BadRequest(ctx, errors.New("invalid item object"))
 	}
+
 	savedItem, err := itemService.update(item)
 	if err != nil {
 		if errors.As(err, &clientError) {

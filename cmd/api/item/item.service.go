@@ -3,7 +3,6 @@ package item
 import (
 	"context"
 
-	"github.com/gDenisLit/item-server-go/cmd/dtos"
 	"github.com/gDenisLit/item-server-go/cmd/models"
 	"github.com/gDenisLit/item-server-go/cmd/services/db"
 	"go.mongodb.org/mongo-driver/bson"
@@ -77,9 +76,12 @@ func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
 		return nil, &models.ClientErr{Message: "invalid id"}
 	}
 
-	_, err = collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
-	if err != nil {
-		return nil, err
+	res, err := collection.DeleteOne(
+		context.TODO(),
+		bson.M{"_id": objectId},
+	)
+	if err != nil || res.DeletedCount == 0 {
+		return nil, &models.ClientErr{Message: "invalid id"}
 	}
 	return &objectId, nil
 }
@@ -105,31 +107,18 @@ func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
 	return savedItem, nil
 }
 
-func (s *ItemService) update(item *dtos.UpdateItemDTO) (*models.Item, error) {
+func (s *ItemService) update(item *models.Item) (*models.Item, error) {
 	collection, err := db.GetCollection(collName)
 	if err != nil {
 		return nil, err
 	}
-
-	objectId, err := primitive.ObjectIDFromHex(item.ID)
-	if err != nil {
-		return nil, &models.ClientErr{Message: "invalid id"}
-	}
-
-	savedItem := &models.Item{
-		ID:     objectId,
-		Name:   item.Name,
-		Price:  item.Price,
-		ImgUrl: item.ImgUrl,
-	}
-
-	_, err = collection.ReplaceOne(
+	res, err := collection.ReplaceOne(
 		context.TODO(),
-		bson.M{"_id": objectId},
-		savedItem,
+		bson.M{"_id": item.ID},
+		item,
 	)
-	if err != nil {
-		return nil, err
+	if err != nil || res.UpsertedCount == 0 {
+		return nil, &models.ClientErr{Message: "invalid item object"}
 	}
-	return savedItem, nil
+	return item, nil
 }
