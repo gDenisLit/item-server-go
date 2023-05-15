@@ -1,120 +1,98 @@
 package item
 
 import (
+	"errors"
+
 	"github.com/gDenisLit/item-server-go/cmd/dtos"
 	"github.com/gDenisLit/item-server-go/cmd/models"
-	"github.com/gDenisLit/item-server-go/cmd/services"
+
+	"github.com/gDenisLit/item-server-go/cmd/services/logger"
+	"github.com/gDenisLit/item-server-go/cmd/services/response"
+
 	"github.com/gofiber/fiber/v2"
 )
+
+var clientError *models.ClientErr
 
 func GetItems(ctx *fiber.Ctx) error {
 
 	filterBy := models.FilterBy{
 		Txt: ctx.Query("txt"),
 	}
-
-	services.Log.Info("Getting items", filterBy)
-	channel := make(chan []models.Item)
-
-	go func() {
-		items, err := Query(filterBy)
-		if err != nil {
-			services.Log.Error("Item controller Error:", err.Error())
-			channel <- nil
-		} else {
-			channel <- items
-		}
-	}()
-
-	items := <-channel
-	if items == nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error",
-		})
+	items, err := itemService.query(filterBy)
+	if err != nil {
+		return response.ServerError(ctx)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(items)
+	return response.Success(ctx, items)
 }
 
 func GetItemById(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid id",
-		})
+		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
-
-	services.Log.Info("Getting item with id:", id)
-	item, err := GetById(id)
-
+	item, err := itemService.getById(id)
 	if err != nil {
-		services.Log.Error("Item controller Error:", err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error",
-		})
+		if errors.As(err, &clientError) {
+			return response.BadRequest(ctx, err)
+		}
+		logger.Debug("Error [GetItemById]:", err, id)
+		return response.ServerError(ctx)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(item)
-}
-
-func AddItem(ctx *fiber.Ctx) error {
-	item := new(dtos.AddItemDTO)
-	err := ctx.BodyParser(item)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"error": "invalid item object",
-		})
-	}
-
-	services.Log.Info("Adding new item", item)
-	savedItem, err := Add(item)
-
-	if err != nil {
-		services.Log.Error("Item controller Error:", err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error",
-		})
-	}
-	return ctx.Status(fiber.StatusAccepted).JSON(savedItem)
-}
-
-func UpdateItem(ctx *fiber.Ctx) error {
-
-	item := new(dtos.UpdateItemDTO)
-	err := ctx.BodyParser(item)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"error": "invalid item object",
-		})
-	}
-
-	services.Log.Info("Updating item", item)
-	savedItem, err := Update(item)
-	if err != nil {
-		services.Log.Error("Item controller Error:", err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error",
-		})
-	}
-	return ctx.Status(fiber.StatusAccepted).JSON(savedItem)
+	return response.Success(ctx, item)
 }
 
 func RemoveItem(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid id",
-		})
+		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
+	itemId, err := itemService.remove(id)
+	if err != nil {
+		if errors.As(err, &clientError) {
+			return response.BadRequest(ctx, err)
+		}
+		logger.Debug("Error [RemoveItem]:", err, id)
+		return response.ServerError(ctx)
+	}
+	return response.Success(ctx, itemId)
+}
 
-	services.Log.Info("Removing item with id:", id)
-	itemId, err := Remove(id)
+func AddItem(ctx *fiber.Ctx) error {
+	item := new(models.ItemDTO)
+	parseErr := ctx.BodyParser(item)
+	validateErr := item.Validate()
+
+	if parseErr != nil || validateErr != nil {
+		logger.Warn("Error [AddItem]: Invalid post request", parseErr, validateErr)
+		return response.BadRequest(ctx, errors.New("invalid item object"))
+	}
+	savedItem, err := itemService.add(item)
+	if err != nil {
+		if errors.As(err, &clientError) {
+			return response.BadRequest(ctx, err)
+		}
+		logger.Debug("Error [AddItem]:", err)
+		return response.ServerError(ctx)
+	}
+	return response.Success(ctx, savedItem)
+}
+
+func UpdateItem(ctx *fiber.Ctx) error {
+	item := new(dtos.UpdateItemDTO)
+	err := ctx.BodyParser(item)
 
 	if err != nil {
-		services.Log.Error("Item controller Error:", err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal server error",
-		})
+		logger.Warn("Error [UpdateItem]: Invalid post request", err)
+		return response.BadRequest(ctx, errors.New("invalid item object"))
 	}
-	return ctx.Status(fiber.StatusAccepted).JSON(itemId)
+	savedItem, err := itemService.update(item)
+	if err != nil {
+		if errors.As(err, &clientError) {
+			return response.BadRequest(ctx, err)
+		}
+		logger.Debug("Error [UpdateItem]:", err)
+		return response.ServerError(ctx)
+	}
+	return response.Success(ctx, savedItem)
 }

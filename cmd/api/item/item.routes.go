@@ -8,9 +8,10 @@ import (
 type middleware func(*fiber.Ctx) error
 
 var log middleware = middlewares.Log
-var auth middleware = middlewares.RequireAuth
 
-func SetItemRoutes(app *fiber.App) {
+// var auth middleware = middlewares.RequireAuth
+
+func RegisterRoutes(app *fiber.App) {
 	router := app.Group("/api/item")
 
 	router.Get("/", log, GetItems)

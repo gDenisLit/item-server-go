@@ -17,7 +17,7 @@ func RequireAuth(ctx *fiber.Ctx) error {
 	userJson := &dtos.LoginDTO{}
 	err := services.Decode("loginToken", loginToken, userJson)
 	if err != nil {
-		services.Log.Debug("error decoding token:", err)
+		// services.Log.Debug("error decoding token:", err)
 		return err
 	}
 	return ctx.Next()

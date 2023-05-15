@@ -3,7 +3,8 @@ package auth
 import (
 	"github.com/gDenisLit/item-server-go/cmd/dtos"
 	"github.com/gDenisLit/item-server-go/cmd/models"
-	"github.com/gDenisLit/item-server-go/cmd/services"
+
+	// "github.com/gDenisLit/item-server-go/cmd/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,7 +18,7 @@ func OnLogin(ctx *fiber.Ctx) error {
 		})
 	}
 
-	services.Log.Info("Login request", credentials)
+	// services.Log.Info("Login request", credentials)
 	user, err := Login(credentials)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -37,7 +38,7 @@ func OnSignup(ctx *fiber.Ctx) error {
 		})
 	}
 
-	services.Log.Info("Signup request", credentials)
+	// services.Log.Info("Signup request", credentials)
 	user, err := Signup(credentials)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -51,13 +52,13 @@ func sendMiniUser(ctx *fiber.Ctx, user *models.User) error {
 	miniUser := getMiniUser(user)
 	loginToken, err := GetLoginToken(miniUser)
 	if err != nil {
-		services.Log.Debug("error in auth controller:", err)
+		// services.Log.Debug("error in auth controller:", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Internal server error",
 		})
 	}
 
-	services.Log.Info("User logged in:", miniUser)
+	// services.Log.Info("User logged in:", miniUser)
 	ctx.Cookie(getCookie(&loginToken))
 	return ctx.Status(fiber.StatusOK).JSON(miniUser)
 }

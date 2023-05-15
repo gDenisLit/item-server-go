@@ -31,7 +31,7 @@ func ConnectDB() error {
 	dbName := os.Getenv("DB_NAME")
 
 	if dbUrl == "" || dbName == "" {
-		return errors.New("Error connecting to DB: Missing dbUrl or dbName")
+		return errors.New("error connecting to DB: Missing dbUrl or dbName")
 	}
 
 	client, err := mongo.Connect(
@@ -45,6 +45,6 @@ func ConnectDB() error {
 	db = client.Database(dbName)
 	connected = true
 
-	Log.Info("MongoDB Connection established")
+	// Log.Info("MongoDB Connection established")
 	return nil
 }

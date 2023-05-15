@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/gDenisLit/item-server-go/cmd/api/auth"
 	"github.com/gDenisLit/item-server-go/cmd/api/item"
 	"github.com/gDenisLit/item-server-go/cmd/api/user"
+	"github.com/gDenisLit/item-server-go/cmd/config"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,10 +15,10 @@ func InitServer() {
 		return ctx.SendString("OK")
 	})
 
-	item.SetItemRoutes(app)
+	item.RegisterRoutes(app)
 	user.SetUserRoutes(app)
 	auth.SetAuthRoutes(app)
 
-	port := os.Getenv("PORT")
+	port := ":" + config.PORT
 	app.Listen(port)
 }

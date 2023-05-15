@@ -5,17 +5,21 @@ import (
 
 	"github.com/gDenisLit/item-server-go/cmd/dtos"
 	"github.com/gDenisLit/item-server-go/cmd/models"
-	"github.com/gDenisLit/item-server-go/cmd/services"
+	"github.com/gDenisLit/item-server-go/cmd/services/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const collName string = "item"
 
-func Query(filterBy models.FilterBy) ([]models.Item, error) {
+type ItemService struct{}
+
+var itemService = &ItemService{}
+
+func (s *ItemService) query(filterBy models.FilterBy) ([]models.Item, error) {
 
 	criteria := buildCriteria(filterBy)
-	collection, err := services.GetDBColletion(collName)
+	collection, err := db.GetCollection(collName)
 	if err != nil {
 		return nil, err
 	}
@@ -39,27 +43,49 @@ func buildCriteria(filterBy models.FilterBy) bson.M {
 	return criteria
 }
 
-func GetById(itemId string) (*models.Item, error) {
-	collection, err := services.GetDBColletion(collName)
+func (s *ItemService) getById(itemId string) (*models.Item, error) {
+	collection, err := db.GetCollection(collName)
 	if err != nil {
 		return nil, err
 	}
 
 	objectId, err := primitive.ObjectIDFromHex(itemId)
 	if err != nil {
-		return nil, err
+		return nil, &models.ClientErr{Message: "invalid id"}
 	}
 
 	item := &models.Item{}
-	err = collection.FindOne(context.TODO(), bson.M{"_id": objectId}).Decode(item)
+	err = collection.FindOne(
+		context.TODO(),
+		bson.M{"_id": objectId},
+	).Decode(item)
+
 	if err != nil {
 		return nil, err
 	}
 	return item, nil
 }
 
-func Add(item *dtos.AddItemDTO) (*models.Item, error) {
-	collection, err := services.GetDBColletion(collName)
+func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
+	collection, err := db.GetCollection(collName)
+	if err != nil {
+		return nil, err
+	}
+
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, &models.ClientErr{Message: "invalid id"}
+	}
+
+	_, err = collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
+	if err != nil {
+		return nil, err
+	}
+	return &objectId, nil
+}
+
+func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
+	collection, err := db.GetCollection(collName)
 	if err != nil {
 		return nil, err
 	}
@@ -79,15 +105,15 @@ func Add(item *dtos.AddItemDTO) (*models.Item, error) {
 	return savedItem, nil
 }
 
-func Update(item *dtos.UpdateItemDTO) (*models.Item, error) {
-	collection, err := services.GetDBColletion(collName)
+func (s *ItemService) update(item *dtos.UpdateItemDTO) (*models.Item, error) {
+	collection, err := db.GetCollection(collName)
 	if err != nil {
 		return nil, err
 	}
 
 	objectId, err := primitive.ObjectIDFromHex(item.ID)
 	if err != nil {
-		return nil, err
+		return nil, &models.ClientErr{Message: "invalid id"}
 	}
 
 	savedItem := &models.Item{
@@ -106,22 +132,4 @@ func Update(item *dtos.UpdateItemDTO) (*models.Item, error) {
 		return nil, err
 	}
 	return savedItem, nil
-}
-
-func Remove(id string) (primitive.ObjectID, error) {
-	collection, err := services.GetDBColletion(collName)
-	if err != nil {
-		return primitive.ObjectID{}, err
-	}
-
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return primitive.ObjectID{}, err
-	}
-
-	_, err = collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
-	if err != nil {
-		return primitive.ObjectID{}, err
-	}
-	return objectId, nil
 }
