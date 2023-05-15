@@ -19,9 +19,11 @@ type ItemDTO struct {
 	ImgUrl string `json:"imgUrl" bson:"imgUrl"`
 }
 
-func (item *ItemDTO) Validate() error {
+func (item *Item) Validate() error {
 	err := errors.New("missing required propery")
-
+	if item.ID == primitive.NilObjectID {
+		return err
+	}
 	if item.Name == "" {
 		return err
 	}
@@ -34,11 +36,9 @@ func (item *ItemDTO) Validate() error {
 	return nil
 }
 
-func (item *Item) Validate() error {
+func (item *ItemDTO) Validate() error {
 	err := errors.New("missing required propery")
-	if item.ID == primitive.NilObjectID {
-		return err
-	}
+
 	if item.Name == "" {
 		return err
 	}

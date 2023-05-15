@@ -13,5 +13,6 @@ func SetUserRoutes(app *fiber.App) {
 	router := app.Group("/api/user")
 
 	router.Get("/", log, GetUsers)
-	router.Get("/:id", log, GetUser)
+	router.Get("/:id", log, GetUserById)
+	router.Delete("/:id", log, RemoveUser)
 }

@@ -9,25 +9,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const collName string = "item"
+type ItemService struct {
+	collName string
+}
 
-type ItemService struct{}
-
-var itemService = &ItemService{}
+var itemService = &ItemService{
+	collName: "item",
+}
 
 func (s *ItemService) query(filterBy models.FilterBy) ([]models.Item, error) {
-
 	criteria := buildCriteria(filterBy)
-	collection, err := db.GetCollection(collName)
+	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}
-
 	cursor, err := collection.Find(context.TODO(), criteria)
 	if err != nil {
 		return nil, err
 	}
-
 	var items []models.Item
 	if err = cursor.All(context.TODO(), &items); err != nil {
 		return nil, err
@@ -43,16 +42,14 @@ func buildCriteria(filterBy models.FilterBy) bson.M {
 }
 
 func (s *ItemService) getById(itemId string) (*models.Item, error) {
-	collection, err := db.GetCollection(collName)
+	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}
-
 	objectId, err := primitive.ObjectIDFromHex(itemId)
 	if err != nil {
 		return nil, &models.ClientErr{Message: "invalid id"}
 	}
-
 	item := &models.Item{}
 	err = collection.FindOne(
 		context.TODO(),
@@ -66,16 +63,14 @@ func (s *ItemService) getById(itemId string) (*models.Item, error) {
 }
 
 func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
-	collection, err := db.GetCollection(collName)
+	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}
-
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, &models.ClientErr{Message: "invalid id"}
 	}
-
 	res, err := collection.DeleteOne(
 		context.TODO(),
 		bson.M{"_id": objectId},
@@ -87,16 +82,14 @@ func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
 }
 
 func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
-	collection, err := db.GetCollection(collName)
+	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}
-
 	res, err := collection.InsertOne(context.TODO(), item)
 	if err != nil {
 		return nil, err
 	}
-
 	objectId := res.InsertedID.(primitive.ObjectID)
 	savedItem := &models.Item{
 		ID:     objectId,
@@ -108,7 +101,7 @@ func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
 }
 
 func (s *ItemService) update(item *models.Item) (*models.Item, error) {
-	collection, err := db.GetCollection(collName)
+	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}

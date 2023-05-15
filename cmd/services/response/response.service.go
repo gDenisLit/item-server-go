@@ -1,6 +1,12 @@
 package response
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"errors"
+
+	"github.com/gDenisLit/item-server-go/cmd/models"
+	"github.com/gDenisLit/item-server-go/cmd/services/logger"
+	"github.com/gofiber/fiber/v2"
+)
 
 type Response struct {
 	Status  int         `json:"status"`
@@ -41,6 +47,20 @@ func Unauthorized(ctx *fiber.Ctx) error {
 func ServerError(ctx *fiber.Ctx) error {
 	response := makeResponse(500, nil, "Internal server error")
 	return ctx.Status(fiber.StatusInternalServerError).JSON(response)
+}
+
+func ServiceError(ctx *fiber.Ctx, name string, err error) error {
+	var clientError *models.ClientErr
+	if errors.As(err, &clientError) {
+		return BadRequest(ctx, err)
+	}
+	logger.Debug("Error [", name, "]", err)
+	return ServerError(ctx)
+}
+
+func ParsingError(ctx *fiber.Ctx, name string, parseErr error, validateErr error) error {
+	logger.Warn("Error [", name, "]: Invalid post request from:", ctx.IP(), parseErr, validateErr)
+	return BadRequest(ctx, errors.New("invalid item object"))
 }
 
 func makeResponse(status int, data any, message string) Response {

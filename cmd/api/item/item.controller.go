@@ -5,13 +5,10 @@ import (
 
 	"github.com/gDenisLit/item-server-go/cmd/models"
 
-	"github.com/gDenisLit/item-server-go/cmd/services/logger"
 	"github.com/gDenisLit/item-server-go/cmd/services/response"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-var clientError *models.ClientErr
 
 func GetItems(ctx *fiber.Ctx) error {
 	filterBy := models.FilterBy{
@@ -31,7 +28,7 @@ func GetItemById(ctx *fiber.Ctx) error {
 	}
 	item, err := itemService.getById(id)
 	if err != nil {
-		return handleServiceError(ctx, "GetItemById", err)
+		return response.ServiceError(ctx, "GetItemById", err)
 	}
 	return response.Success(ctx, item)
 }
@@ -43,7 +40,7 @@ func RemoveItem(ctx *fiber.Ctx) error {
 	}
 	itemId, err := itemService.remove(id)
 	if err != nil {
-		return handleServiceError(ctx, "RemoveItem", err)
+		return response.ServiceError(ctx, "RemoveItem", err)
 	}
 	return response.Success(ctx, itemId)
 }
@@ -54,11 +51,11 @@ func AddItem(ctx *fiber.Ctx) error {
 	validateErr := item.Validate()
 
 	if parseErr != nil || validateErr != nil {
-		return handleParsingError(ctx, "AddItem", parseErr, validateErr)
+		return response.ParsingError(ctx, "AddItem", parseErr, validateErr)
 	}
 	savedItem, err := itemService.add(item)
 	if err != nil {
-		return handleServiceError(ctx, "AddItem", err)
+		return response.ServiceError(ctx, "AddItem", err)
 	}
 	return response.Success(ctx, savedItem)
 }
@@ -69,24 +66,11 @@ func UpdateItem(ctx *fiber.Ctx) error {
 	validateErr := item.Validate()
 
 	if parseErr != nil || validateErr != nil {
-		return handleParsingError(ctx, "UpdateItem", parseErr, validateErr)
+		return response.ParsingError(ctx, "UpdateItem", parseErr, validateErr)
 	}
 	savedItem, err := itemService.update(item)
 	if err != nil {
-		return handleServiceError(ctx, "UpdateItem", err)
+		return response.ServiceError(ctx, "UpdateItem", err)
 	}
 	return response.Success(ctx, savedItem)
-}
-
-func handleServiceError(ctx *fiber.Ctx, name string, err error) error {
-	if errors.As(err, &clientError) {
-		return response.BadRequest(ctx, err)
-	}
-	logger.Debug("Error [", name, "]", err)
-	return response.ServerError(ctx)
-}
-
-func handleParsingError(ctx *fiber.Ctx, name string, parseErr error, validateErr error) error {
-	logger.Warn("Error [", name, "]: Invalid post request from:", ctx.IP(), parseErr, validateErr)
-	return response.BadRequest(ctx, errors.New("invalid item object"))
 }
