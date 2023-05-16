@@ -70,6 +70,7 @@ func ServerError(ctx *fiber.Ctx) error {
 func ServiceError(ctx *fiber.Ctx, name string, err error) error {
 	var clientError *models.ClientErr
 	if errors.As(err, &clientError) {
+		logger.Debug("client error:", err)
 		return BadRequest(ctx, err)
 	}
 	logger.Debug("Error [", name, "]", err)

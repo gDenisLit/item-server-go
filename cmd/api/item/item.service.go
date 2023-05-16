@@ -110,7 +110,7 @@ func (s *service) update(item *models.Item) (*models.Item, error) {
 		bson.M{"_id": item.ID},
 		item,
 	)
-	if err != nil || res.UpsertedCount == 0 {
+	if err != nil || res.MatchedCount == 0 {
 		return nil, &models.ClientErr{Message: "invalid item object"}
 	}
 	return item, nil

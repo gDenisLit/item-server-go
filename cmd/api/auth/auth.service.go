@@ -76,10 +76,15 @@ func (s *service) GetLoginToken(user *models.User) (string, error) {
 }
 
 func (s *service) ValidateToken(token string) (*models.User, error) {
-	var user *models.User
-	err := secure.Decode(s.tokenName, token, user)
+	var userBytes []byte
+	err := secure.Decode(s.tokenName, token, &userBytes)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	var user models.User
+	err = json.Unmarshal(userBytes, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
