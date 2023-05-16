@@ -1,12 +1,11 @@
 package middlewares
 
 import (
+	"github.com/gDenisLit/item-server-go/cmd/services/logger"
 	"github.com/gofiber/fiber/v2"
-	// "github.com/gDenisLit/item-server-go/cmd/services"
 )
 
 func Log(ctx *fiber.Ctx) error {
-	// Log something for each server reqest
-	// services.Logger.Info("Request URL: ", )
+	logger.Info(ctx.Method(), "Request from", ctx.IP(), "for", ctx.Path())
 	return ctx.Next()
 }

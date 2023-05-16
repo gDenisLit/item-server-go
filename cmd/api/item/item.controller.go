@@ -14,7 +14,7 @@ func GetItems(ctx *fiber.Ctx) error {
 	filterBy := models.FilterBy{
 		Txt: ctx.Query("txt"),
 	}
-	items, err := itemService.query(filterBy)
+	items, err := ItemService.query(filterBy)
 	if err != nil {
 		return response.ServerError(ctx)
 	}
@@ -26,7 +26,7 @@ func GetItemById(ctx *fiber.Ctx) error {
 	if id == "" {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
-	item, err := itemService.getById(id)
+	item, err := ItemService.getById(id)
 	if err != nil {
 		return response.ServiceError(ctx, "GetItemById", err)
 	}
@@ -38,7 +38,7 @@ func RemoveItem(ctx *fiber.Ctx) error {
 	if id == "" {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
-	itemId, err := itemService.remove(id)
+	itemId, err := ItemService.remove(id)
 	if err != nil {
 		return response.ServiceError(ctx, "RemoveItem", err)
 	}
@@ -53,7 +53,7 @@ func AddItem(ctx *fiber.Ctx) error {
 	if parseErr != nil || validateErr != nil {
 		return response.ParsingError(ctx, "AddItem", parseErr, validateErr)
 	}
-	savedItem, err := itemService.add(item)
+	savedItem, err := ItemService.add(item)
 	if err != nil {
 		return response.ServiceError(ctx, "AddItem", err)
 	}
@@ -68,7 +68,7 @@ func UpdateItem(ctx *fiber.Ctx) error {
 	if parseErr != nil || validateErr != nil {
 		return response.ParsingError(ctx, "UpdateItem", parseErr, validateErr)
 	}
-	savedItem, err := itemService.update(item)
+	savedItem, err := ItemService.update(item)
 	if err != nil {
 		return response.ServiceError(ctx, "UpdateItem", err)
 	}

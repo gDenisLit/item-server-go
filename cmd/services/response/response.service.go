@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gDenisLit/item-server-go/cmd/models"
 	"github.com/gDenisLit/item-server-go/cmd/services/logger"
@@ -25,13 +26,30 @@ func Created(ctx *fiber.Ctx, data any) error {
 }
 
 func LoginSuccess(ctx *fiber.Ctx, token string, data any) error {
-	// TODO
-	response := makeResponse(201, data, "success")
-	return ctx.Status(fiber.StatusCreated).JSON(response)
+	cookie := &fiber.Cookie{
+		Name:     "loginToken",
+		Value:    token,
+		Expires:  time.Now().Add(24 * time.Hour),
+		Secure:   true,
+		SameSite: "None",
+		HTTPOnly: true,
+	}
+	ctx.Cookie(cookie)
+	response := makeResponse(200, data, "success")
+	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
 func LogoutSuccess(ctx *fiber.Ctx) error {
-	return nil
+	cookie := &fiber.Cookie{
+		Name:     "loginToken",
+		Expires:  time.Now().Add(-(time.Hour * 2)),
+		Secure:   true,
+		SameSite: "None",
+		HTTPOnly: true,
+	}
+	ctx.Cookie(cookie)
+	response := makeResponse(200, nil, "Logged out successfully")
+	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
 func BadRequest(ctx *fiber.Ctx, err error) error {
@@ -60,7 +78,7 @@ func ServiceError(ctx *fiber.Ctx, name string, err error) error {
 
 func ParsingError(ctx *fiber.Ctx, name string, parseErr error, validateErr error) error {
 	logger.Warn("Error [", name, "]: Invalid post request from:", ctx.IP(), parseErr, validateErr)
-	return BadRequest(ctx, errors.New("invalid item object"))
+	return BadRequest(ctx, errors.New("missing required fields"))
 }
 
 func makeResponse(status int, data any, message string) Response {

@@ -10,7 +10,7 @@ import (
 
 func GetUsers(ctx *fiber.Ctx) error {
 	logger.Warn("IP:", ctx.IP(), "requests users")
-	users, err := userService.query()
+	users, err := UserService.Query()
 	if err != nil {
 		return response.ServerError(ctx)
 	}
@@ -24,7 +24,7 @@ func GetUserById(ctx *fiber.Ctx) error {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
 	logger.Warn("IP:", ctx.IP(), "request a user with id:", id)
-	item, err := userService.getById(id)
+	item, err := UserService.GetById(id)
 	if err != nil {
 		return response.ServiceError(ctx, "GetUserById", err)
 	}
@@ -38,7 +38,7 @@ func RemoveUser(ctx *fiber.Ctx) error {
 		return response.BadRequest(ctx, errors.New("invalid id"))
 	}
 	logger.Warn("IP:", ctx.IP(), "requests to remove user with id:", id)
-	itemId, err := userService.remove(id)
+	itemId, err := UserService.Remove(id)
 	if err != nil {
 		return response.ServiceError(ctx, "RemoveUser", err)
 	}

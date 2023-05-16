@@ -9,26 +9,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type UserService struct {
+type service struct {
 	collName string
 }
 
-var userService = &UserService{
+var UserService = &service{
 	collName: "user",
 }
 
-func (s *UserService) query() ([]models.User, error) {
-
+func (s *service) Query() ([]models.User, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
 	}
-
 	cursor, err := collection.Find(context.TODO(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
-
 	var users []models.User
 	if err = cursor.All(context.TODO(), &users); err != nil {
 		return nil, err
@@ -36,7 +33,7 @@ func (s *UserService) query() ([]models.User, error) {
 	return users, nil
 }
 
-func (s *UserService) getById(userId string) (*models.User, error) {
+func (s *service) GetById(userId string) (*models.User, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -52,12 +49,12 @@ func (s *UserService) getById(userId string) (*models.User, error) {
 	).Decode(user)
 
 	if err != nil {
-		return nil, err
+		return nil, &models.ClientErr{Message: "invalid id"}
 	}
 	return user, nil
 }
 
-func (s *UserService) getByUsername(username string) (*models.User, error) {
+func (s *service) GetByUsername(username string) (*models.User, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -69,12 +66,12 @@ func (s *UserService) getByUsername(username string) (*models.User, error) {
 	).Decode(user)
 
 	if err != nil {
-		return nil, err
+		return nil, &models.ClientErr{Message: "invalid username"}
 	}
 	return user, nil
 }
 
-func (s *UserService) remove(id string) (*primitive.ObjectID, error) {
+func (s *service) Remove(id string) (*primitive.ObjectID, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -93,7 +90,7 @@ func (s *UserService) remove(id string) (*primitive.ObjectID, error) {
 	return &objectId, nil
 }
 
-func (s *UserService) add(user *models.UserDTO) (*models.User, error) {
+func (s *service) Add(user *models.User) (*models.User, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -103,13 +100,7 @@ func (s *UserService) add(user *models.UserDTO) (*models.User, error) {
 		return nil, err
 	}
 	objectId := res.InsertedID.(primitive.ObjectID)
-	savedUser := &models.User{
-		ID:       objectId,
-		Username: user.Username,
-		Password: user.Password,
-		Fullname: user.Fullname,
-		ImgUrl:   user.ImgUrl,
-		IsAdmin:  false,
-	}
-	return savedUser, nil
+	user.ID = objectId
+	user.IsAdmin = false
+	return user, nil
 }

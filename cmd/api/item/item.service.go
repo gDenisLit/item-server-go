@@ -9,15 +9,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type ItemService struct {
+type service struct {
 	collName string
 }
 
-var itemService = &ItemService{
+var ItemService = &service{
 	collName: "item",
 }
 
-func (s *ItemService) query(filterBy models.FilterBy) ([]models.Item, error) {
+func (s *service) query(filterBy models.FilterBy) ([]models.Item, error) {
 	criteria := buildCriteria(filterBy)
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
@@ -41,7 +41,7 @@ func buildCriteria(filterBy models.FilterBy) bson.M {
 	return criteria
 }
 
-func (s *ItemService) getById(itemId string) (*models.Item, error) {
+func (s *service) getById(itemId string) (*models.Item, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (s *ItemService) getById(itemId string) (*models.Item, error) {
 	return item, nil
 }
 
-func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
+func (s *service) remove(id string) (*primitive.ObjectID, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (s *ItemService) remove(id string) (*primitive.ObjectID, error) {
 	return &objectId, nil
 }
 
-func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
+func (s *service) add(item *models.ItemDTO) (*models.Item, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (s *ItemService) add(item *models.ItemDTO) (*models.Item, error) {
 	return savedItem, nil
 }
 
-func (s *ItemService) update(item *models.Item) (*models.Item, error) {
+func (s *service) update(item *models.Item) (*models.Item, error) {
 	collection, err := db.GetCollection(s.collName)
 	if err != nil {
 		return nil, err

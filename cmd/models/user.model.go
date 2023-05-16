@@ -17,9 +17,36 @@ type User struct {
 
 type UserDTO struct {
 	Username string `json:"username" bson:"username"`
-	Password string `json:"password" bson:"password"`
 	Fullname string `json:"fullname" bson:"fullname"`
 	ImgUrl   string `json:"imgUrl" bson:"imgUrl"`
+}
+
+func (user *User) ValidateLoginCredentials() error {
+	err := errors.New("missing username or passowrd")
+	if user.Username == "" {
+		return err
+	}
+	if user.Password == "" {
+		return err
+	}
+	return nil
+}
+
+func (user *User) ValidateSignupCredentials() error {
+	err := errors.New("missing required propery")
+	if user.Username == "" {
+		return err
+	}
+	if user.Password == "" {
+		return err
+	}
+	if user.Fullname == "" {
+		return err
+	}
+	if user.ImgUrl == "" {
+		return err
+	}
+	return nil
 }
 
 func (user *User) Validate() error {
@@ -47,9 +74,6 @@ func (user *UserDTO) Validate() error {
 	if user.Username == "" {
 		return err
 	}
-	if user.Password == "" {
-		return err
-	}
 	if user.Fullname == "" {
 		return err
 	}
@@ -57,4 +81,14 @@ func (user *UserDTO) Validate() error {
 		return err
 	}
 	return nil
+}
+
+func (user *User) Minify() map[string]interface{} {
+	minifiedUser := map[string]interface{}{
+		"_id":      user.ID,
+		"username": user.Username,
+		"fullname": user.Fullname,
+		"imgUrl":   user.ImgUrl,
+	}
+	return minifiedUser
 }

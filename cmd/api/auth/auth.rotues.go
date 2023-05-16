@@ -12,7 +12,7 @@ var log middleware = middlewares.Log
 func SetAuthRoutes(app *fiber.App) {
 	router := app.Group("/api/auth")
 
-	router.Post("/login", log, OnLogin)
-	router.Post("/signup", log, OnSignup)
-	router.Post("/logout", log, OnLogout)
+	router.Post("/login", log, Login)
+	router.Post("/signup", log, Signup)
+	router.Post("/logout", log, Logout)
 }

@@ -2,38 +2,52 @@ package auth
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/gDenisLit/item-server-go/cmd/api/user"
-	"github.com/gDenisLit/item-server-go/cmd/dtos"
+	"github.com/gDenisLit/item-server-go/cmd/config"
 	"github.com/gDenisLit/item-server-go/cmd/models"
-	"github.com/gDenisLit/item-server-go/cmd/services"
+	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Login(credentials *dtos.LoginDTO) (*models.User, error) {
-	user, err := user.GetByUsername(credentials.Username)
-	if err != nil {
-		return nil, err
-	}
+type service struct {
+	hashKey   []byte
+	blockKey  []byte
+	tokenName string
+}
 
+var AuthService = &service{
+	hashKey:   []byte(config.SECRET_KEY),
+	blockKey:  []byte(config.BLOCK_KEY),
+	tokenName: "loginToken",
+}
+
+var secure = securecookie.New(
+	AuthService.hashKey,
+	AuthService.blockKey,
+)
+
+func (s *service) Login(credentials *models.User) (*models.User, error) {
+	user, err := user.UserService.GetByUsername(credentials.Username)
+	if err != nil {
+		return nil, &models.ClientErr{Message: "invalid username or password"}
+	}
 	err = bcrypt.CompareHashAndPassword(
 		[]byte(user.Password),
 		[]byte(credentials.Password),
 	)
 	if err != nil {
-		return nil, err
+		return nil, &models.ClientErr{Message: "invalid username or password"}
 	}
 	return user, nil
 }
 
-func Signup(credentials *dtos.SignupDTO) (*models.User, error) {
-	_, err := user.GetByUsername(credentials.Username)
+func (s *service) Signup(credentials *models.User) (*models.User, error) {
+	_, err := user.UserService.GetByUsername(credentials.Username)
 	if err == nil {
-		return nil, errors.New("username already taken")
+		return nil, &models.ClientErr{Message: "username is already taken"}
 	}
-
-	saltRounds := 10
+	saltRounds := config.SALT_ROUNDS
 	hash, err := bcrypt.GenerateFromPassword(
 		[]byte(credentials.Password),
 		saltRounds,
@@ -41,30 +55,31 @@ func Signup(credentials *dtos.SignupDTO) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	credentials.Password = string(hash)
-	user, err := user.Add(credentials)
+	user, err := user.UserService.Add(credentials)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func GetLoginToken(user *dtos.UserDTO) (string, error) {
-
-	userJson, err := json.Marshal(user)
+func (s *service) GetLoginToken(user *models.User) (string, error) {
+	userJson, err := json.Marshal(user.Minify())
 	if err != nil {
 		return "", err
 	}
-
-	token, err := services.Encode("loginToken", userJson)
+	token, err := secure.Encode(s.tokenName, userJson)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
 }
 
-func ValidateToken(token string) (*models.User, error) {
-
-	return nil, nil
+func (s *service) ValidateToken(token string) (*models.User, error) {
+	var user *models.User
+	err := secure.Decode(s.tokenName, token, user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

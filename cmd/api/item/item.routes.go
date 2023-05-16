@@ -14,8 +14,8 @@ var log middleware = middlewares.Log
 func RegisterRoutes(app *fiber.App) {
 	router := app.Group("/api/item")
 
-	router.Get("/", log, GetItems)
-	router.Get("/:id", log, GetItemById)
+	router.Get("/", GetItems)
+	router.Get("/:id", GetItemById)
 	router.Post("/", log, AddItem)
 	router.Put("/", log, UpdateItem)
 	router.Delete("/:id", log, RemoveItem)
